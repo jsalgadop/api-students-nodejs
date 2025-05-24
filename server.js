@@ -3,29 +3,21 @@ const sqlite3 = require('sqlite3').verbose();
 const app = express();
 const port = 8001;
 
-// Middleware para parsear datos JSON
-app.use(express.json());
+// Middleware para parsear datos de formularios y JSON
 app.use(express.urlencoded({ extended: true }));
+app.use(express.json());
 
-// Conexión a la base de datos SQLite
+// Conexión a la base de datos SQLite existente
 function dbConnection() {
     return new sqlite3.Database('students.sqlite', (err) => {
         if (err) {
-            console.error(err.message);
+            console.error('Error al conectar a la base de datos:', err.message);
         }
         console.log('Conectado a la base de datos SQLite');
     });
 }
 
-// Crear la tabla al iniciar la aplicación (solo si no existe)
 const db = dbConnection();
-db.run(`CREATE TABLE IF NOT EXISTS students (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    firstname TEXT NOT NULL,
-    lastname TEXT NOT NULL,
-    gender TEXT NOT NULL,
-    age TEXT
-)`);
 
 // Ruta para manejar todos los estudiantes (GET y POST)
 app.route('/students')
@@ -39,6 +31,9 @@ app.route('/students')
     })
     .post((req, res) => {
         const { firstname, lastname, gender, age } = req.body;
+        if (!firstname || !lastname || !gender || !age) {
+            return res.status(400).send('Faltan campos obligatorios');
+        }
         db.run(
             `INSERT INTO students (firstname, lastname, gender, age) VALUES (?, ?, ?, ?)`,
             [firstname, lastname, gender, age],
@@ -46,7 +41,7 @@ app.route('/students')
                 if (err) {
                     return res.status(500).send('Error al crear estudiante');
                 }
-                res.send(`Estudiante con id: ${this.lastID} creado exitosamente`);
+                res.send(`Student with id: ${this.lastID} created successfully`);
             }
         );
     });
@@ -62,13 +57,16 @@ app.route('/student/:id')
             if (row) {
                 res.json(row);
             } else {
-                res.status(404).send('Estudiante no encontrado');
+                res.status(404).send('Something went wrong');
             }
         });
     })
     .put((req, res) => {
         const id = req.params.id;
         const { firstname, lastname, gender, age } = req.body;
+        if (!firstname || !lastname || !gender || !age) {
+            return res.status(400).send('Faltan campos obligatorios');
+        }
         db.run(
             `UPDATE students SET firstname = ?, lastname = ?, gender = ?, age = ? WHERE id = ?`,
             [firstname, lastname, gender, age, id],
@@ -92,7 +90,7 @@ app.route('/student/:id')
             if (this.changes === 0) {
                 return res.status(404).send('Estudiante no encontrado');
             }
-            res.status(200).send(`El estudiante con id: ${id} ha sido eliminado.`);
+            res.status(200).send(`The Student with id: ${id} has been deleted.`);
         });
     });
 
@@ -105,7 +103,7 @@ app.listen(port, '0.0.0.0', () => {
 process.on('SIGINT', () => {
     db.close((err) => {
         if (err) {
-            console.error(err.message);
+            console.error('Error al cerrar la conexión a la base de datos:', err.message);
         }
         console.log('Conexión a la base de datos cerrada.');
         process.exit(0);
