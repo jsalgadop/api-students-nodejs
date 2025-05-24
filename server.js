@@ -3,9 +3,9 @@ const sqlite3 = require('sqlite3').verbose();
 const app = express();
 const port = 8001;
 
-// Middleware para parsear datos de formularios
-app.use(express.urlencoded({ extended: true }));
+// Middleware para parsear datos JSON
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
 // Conexión a la base de datos SQLite
 function dbConnection() {
