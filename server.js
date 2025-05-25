@@ -30,17 +30,10 @@ app.route('/students')
         });
     })
     .post((req, res) => {
-        // Extraer campos directamente de req.body
-        const firstname = req.body.firstname;
-        const lastname = req.body.lastname;
-        const gender = req.body.gender;
-        const age = req.body.age;
-
-        // Validación de campos obligatorios
+        const { firstname, lastname, gender, age } = req.body;
         if (!firstname || !lastname || !gender || !age) {
             return res.status(400).send('Faltan campos obligatorios');
         }
-
         db.run(
             `INSERT INTO students (firstname, lastname, gender, age) VALUES (?, ?, ?, ?)`,
             [firstname, lastname, gender, age],
@@ -70,15 +63,10 @@ app.route('/student/:id')
     })
     .put((req, res) => {
         const id = req.params.id;
-        const firstname = req.body.firstname;
-        const lastname = req.body.lastname;
-        const gender = req.body.gender;
-        const age = req.body.age;
-
+        const { firstname, lastname, gender, age } = req.body;
         if (!firstname || !lastname || !gender || !age) {
             return res.status(400).send('Faltan campos obligatorios');
         }
-
         db.run(
             `UPDATE students SET firstname = ?, lastname = ?, gender = ?, age = ? WHERE id = ?`,
             [firstname, lastname, gender, age, id],
